@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 import PyPDF2
+from pdfminer.high_level import extract_text
 import threading
 from tqdm import tqdm
 import traceback  # エラーの詳細を取得するためのモジュール
@@ -11,8 +12,12 @@ class PDFConverter:
         self.root.title("PDF to TXT コンバータ")
 
         # ウィンドウの初期サイズを設定
-        self.root.geometry("300x150")
+        self.root.geometry("300x200")
         
+        self.library_choice = tk.StringVar(value="PyPDF2")
+        tk.Radiobutton(root, text="PyPDF2", variable=self.library_choice, value="PyPDF2").pack()
+        tk.Radiobutton(root, text="pdfminer.six", variable=self.library_choice, value="pdfminer.six").pack()
+
         self.convert_btn = tk.Button(root, text="PDFをテキストに変換", command=self.start_conversion)
         self.convert_btn.pack(pady=20)
 
@@ -33,13 +38,17 @@ class PDFConverter:
 
     def convert_pdf_to_txt(self):
         try:
-            with open(self.pdf_file_path, 'rb') as file:
-                reader = PyPDF2.PdfReader(file)
-                text = ''
-                for page_num in tqdm(range(len(reader.pages)), unit="page"):
-                    text += reader.pages[page_num].extract_text()
-                    self.update_progress((page_num+1) / len(reader.pages) * 100)
-                self.save_as_txt(text)
+            text = ''
+            if self.library_choice.get() == "PyPDF2":
+                with open(self.pdf_file_path, 'rb') as file:
+                    reader = PyPDF2.PdfReader(file)
+                    for page_num in tqdm(range(len(reader.pages)), unit="page"):
+                        text += reader.pages[page_num].extract_text()
+                        self.update_progress((page_num+1) / len(reader.pages) * 100)
+            else:
+                text = extract_text(self.pdf_file_path)
+            
+            self.save_as_txt(text)
         except Exception as e:
             # エラーの詳細を取得して表示
             error_detail = traceback.format_exc()
