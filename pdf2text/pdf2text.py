@@ -3,6 +3,7 @@ from tkinter import filedialog, messagebox, ttk
 import PyPDF2
 import threading
 from tqdm import tqdm
+import traceback  # エラーの詳細を取得するためのモジュール
 
 class PDFConverter:
     def __init__(self, root):
@@ -40,7 +41,9 @@ class PDFConverter:
                     self.update_progress((page_num+1) / len(reader.pages) * 100)
                 self.save_as_txt(text)
         except Exception as e:
-            messagebox.showerror("エラー", f"PDFの読み込み中にエラーが発生しました: {e}")
+            # エラーの詳細を取得して表示
+            error_detail = traceback.format_exc()
+            messagebox.showerror("エラー", f"PDFの読み込み中にエラーが発生しました: {e}\n\n詳細:\n{error_detail}")
         finally:
             self.convert_btn["state"] = "normal"
 
